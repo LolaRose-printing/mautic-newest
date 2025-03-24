@@ -1,7 +1,7 @@
 # Use an official PHP image with Apache
 FROM php:8.0-apache
 
-# Install system dependencies and required packages
+# Install system dependencies and required packages, including build tools
 RUN apt-get update && apt-get install -y \
     gnupg2 \
     curl \
@@ -11,7 +11,14 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     unixodbc-dev \
+    libssl-dev \
+    build-essential \
+    autoconf \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
+
+# Update the PECL channel to ensure we have the latest package information
+RUN pecl channel-update pecl.php.net
 
 # Add Microsoft repository for the ODBC drivers
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
@@ -22,6 +29,8 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
 
 # Install PHP extensions required by Mautic and SQL Server drivers
 RUN docker-php-ext-install intl mbstring xml opcache
+
+# Install and enable SQL Server drivers via PECL
 RUN pecl install sqlsrv pdo_sqlsrv && docker-php-ext-enable sqlsrv pdo_sqlsrv
 
 # Enable Apache mod_rewrite for proper URL handling in Mautic
@@ -39,5 +48,5 @@ RUN chown -R www-data:www-data /var/www/html
 # Expose port 80 for Apache
 EXPOSE 80
 
-# Optionally, set the default command (Apache runs in the foreground)
+# Start Apache in the foreground
 CMD ["apache2-foreground"]
