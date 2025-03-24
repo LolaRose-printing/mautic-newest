@@ -17,9 +17,6 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Update the PECL channel to ensure we have the latest package information
-RUN pecl channel-update pecl.php.net
-
 # Add Microsoft repository for the ODBC drivers
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     curl https://packages.microsoft.com/config/debian/$(grep -oP '(?<=VERSION_ID=")\d+' /etc/os-release)/prod.list \
@@ -27,7 +24,17 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql17
 
-# Install PHP extensions required by Mautic and SQL Server drivers
+# Install dependencies for PHP extensions
+RUN apt-get install -y \
+    libmcrypt-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libicu-dev \
+    libxml2-dev \
+    unixodbc-dev
+
+# Install and enable PHP extensions required by Mautic and SQL Server drivers
 RUN docker-php-ext-install intl mbstring xml opcache
 
 # Install and enable SQL Server drivers via PECL
@@ -50,4 +57,3 @@ EXPOSE 80
 
 # Start Apache in the foreground
 CMD ["apache2-foreground"]
-
