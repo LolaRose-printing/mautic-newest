@@ -36,11 +36,20 @@ RUN pecl install sqlsrv-5.11.1 pdo_sqlsrv-5.11.1 && docker-php-ext-enable sqlsrv
 # Enable Apache mod_rewrite (required by Mautic)
 RUN a2enmod rewrite
 
-# Set working directory to the Apache document root
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Set working directory to Apache document root
 WORKDIR /var/www/html
 
-# Copy your Mautic source code into the container
-COPY . /var/www/html
+# Copy Composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies via Composer
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
+
+# Copy the rest of your Mautic source code into the container
+COPY . .
 
 # Ensure the web server has proper permissions on the application files
 RUN chown -R www-data:www-data /var/www/html
