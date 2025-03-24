@@ -27,28 +27,22 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
 # Install PHP extensions required by Mautic
 RUN docker-php-ext-install intl mbstring xml opcache
 
-# Update PECL channel
+# Update the PECL channel
 RUN pecl channel-update pecl.php.net
 
-# Install and enable SQL Server drivers via PECL using specific versions known to work with PHP 8.0
+# Install SQL Server drivers via PECL (explicit versions known to work with PHP 8.0)
 RUN pecl install sqlsrv-5.11.1 pdo_sqlsrv-5.11.1 && docker-php-ext-enable sqlsrv pdo_sqlsrv
 
-# Enable Apache mod_rewrite
+# Enable Apache mod_rewrite (required by Mautic)
 RUN a2enmod rewrite
 
-# Set working directory to Apache document root
+# Set working directory to the Apache document root
 WORKDIR /var/www/html
 
-# Copy your application code into the container
+# Copy your Mautic source code into the container
 COPY . /var/www/html
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Install PHP dependencies using Composer
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
-
-# Ensure proper permissions
+# Ensure the web server has proper permissions on the application files
 RUN chown -R www-data:www-data /var/www/html
 
 # Expose port 80 for Apache
