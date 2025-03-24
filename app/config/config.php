@@ -104,28 +104,25 @@ $container->loadFromExtension('framework', [
             Mautic\MessengerBundle\Message\EmailHitNotification::class => 'hit',
         ],
     ],
-
-    /*'validation'           => array(
-        'static_method' => array('loadValidatorMetadata')
-    )*/
 ]);
 
 $container->setParameter('mautic.famework.csrf_protection', true);
 
 // Doctrine Configuration
 $connectionSettings = [
-    'driver'                => '%mautic.db_driver%',
-    'host'                  => '%mautic.db_host%',
-    'port'                  => '%mautic.db_port%',
-    'dbname'                => '%mautic.db_name%',
-    'user'                  => '%mautic.db_user%',
-    'password'              => 'SartorFit201', // Insert your password here
+    'driver'                => 'pdo_sqlsrv', // Use the SQL Server driver
+    'host'                  => 'sartorfit-db.database.windows.net',
+    'port'                  => 1433,
+    'dbname'                => 'sartorfit',
+    'user'                  => 'CloudSAf286aa7a@sartorfit-db',
+    'password'              => 'SartorFit201',
     'charset'               => 'utf8mb4',
     'default_table_options' => [
         'charset'    => 'utf8mb4',
         'collate'    => 'utf8mb4_unicode_ci',
         'row_format' => 'DYNAMIC',
     ],
+    // Prevent Doctrine from crapping out with "unsupported type" errors due to it examining all tables in the database and not just Mautic's
     'mapping_types' => [
         'enum'  => 'string',
         'point' => 'string',
@@ -137,16 +134,16 @@ $connectionSettings = [
 ];
 
 if (!empty($localConfigParameterBag->get('db_host_ro'))) {
-    $connectionSettings['wrapper_class']   = Mautic\CoreBundle\Doctrine\Connection\PrimaryReadReplicaConnectionWrapper::class;
-    $connectionSettings['keep_replica']    = true;
-    $connectionSettings['replicas']        = [
+    $connectionSettings['wrapper_class'] = Mautic\CoreBundle\Doctrine\Connection\PrimaryReadReplicaConnectionWrapper::class;
+    $connectionSettings['keep_replica']  = true;
+    $connectionSettings['replicas']      = [
         'replica1' => [
-            'host'                  => '%mautic.db_host_ro%',
-            'port'                  => '%mautic.db_port%',
-            'dbname'                => '%mautic.db_name%',
-            'user'                  => '%mautic.db_user%',
-            'password'              => '%mautic.db_password%',
-            'charset'               => 'utf8mb4',
+            'host'     => '%mautic.db_host_ro%',
+            'port'     => '%mautic.db_port%',
+            'dbname'   => '%mautic.db_name%',
+            'user'     => '%mautic.db_user%',
+            'password' => '%mautic.db_password%',
+            'charset'  => 'utf8mb4',
         ],
     ];
 }
@@ -159,14 +156,14 @@ $container->loadFromExtension('doctrine', [
             'unbuffered' => array_merge($connectionSettings, [
                 'options' => [
                     PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
-                    PDO::ATTR_STRINGIFY_FETCHES        => true, // @see https://www.php.net/manual/en/migration81.incompatible.php#migration81.incompatible.pdo.mysql
+                    PDO::ATTR_STRINGIFY_FETCHES        => true,
                 ],
             ]),
         ],
         'types'    => [
-            Types::ARRAY                  => Type\ArrayType::class,
-            Types::DATETIME_MUTABLE       => Type\UTCDateTimeType::class,
-            Types::DATETIME_IMMUTABLE     => Type\UTCDateTimeImmutableType::class,
+            Types::ARRAY              => Type\ArrayType::class,
+            Types::DATETIME_MUTABLE   => Type\UTCDateTimeType::class,
+            Types::DATETIME_IMMUTABLE => Type\UTCDateTimeImmutableType::class,
             Type\GeneratedType::GENERATED => Type\GeneratedType::class,
         ],
     ],
@@ -206,10 +203,6 @@ $container->loadFromExtension('knp_menu', [
 
 // OneupUploader Configuration
 $container->loadFromExtension('oneup_uploader', [
-    // 'orphanage' => array(
-    //     'maxage' => 86400,
-    //     'directory' => $uploadDir . '/orphanage'
-    // ),
     'mappings' => [
         'asset' => [
             'error_handler'   => 'mautic.asset.upload.error.handler',
@@ -218,8 +211,6 @@ $container->loadFromExtension('oneup_uploader', [
                 'class' => 'Mautic\AssetBundle\Controller\UploadController',
                 'name'  => 'mautic',
             ],
-            // 'max_size' => ($maxSize * 1000000),
-            // 'use_orphanage' => true,
             'storage' => [
                 'directory' => '%mautic.upload_dir%',
             ],
@@ -295,7 +286,7 @@ $container->loadFromExtension('noxlogic_rate_limit', [
     ],
     'fos_oauth_key_listener' => true,
     'display_headers'        => true,
-    'rate_response_message'  => '{ "errors": [ { "code": 429, "message": "You exceeded the rate limit of '.$rateLimit.' API calls per hour.", "details": [] } ]}',
+    'rate_response_message'  => '{ "errors": [ { "code": 429, "message": "You exceeded the rate limit of ' . $rateLimit . ' API calls per hour.", "details": [] } ]}',
 ]);
 
 $container->setParameter(
@@ -353,7 +344,6 @@ $container->loadFromExtension('fm_elfinder', [
             'editor'          => 'custom',
             'editor_template' => '@bundles/CoreBundle/Assets/js/libraries/filemanager/index.html.twig',
             'fullscreen'      => true,
-            // 'include_assets'  => true,
             'relative_path'   => false,
             'connector'       => [
                 'debug' => '%kernel.debug%',
@@ -361,7 +351,7 @@ $container->loadFromExtension('fm_elfinder', [
                     'upload.pre mkdir.pre mkfile.pre rename.pre archive.pre ls.pre' => [
                         'Plugin.Sanitizer.cmdPreprocess',
                     ],
-                    'upload.presave paste.copyfrom'                                 => [
+                    'upload.presave paste.copyfrom' => [
                         'Plugin.Sanitizer.onUpLoadPreSave',
                     ],
                 ],
@@ -373,17 +363,17 @@ $container->loadFromExtension('fm_elfinder', [
                 ],
                 'roots' => [
                     'local' => [
-                        'driver'        => 'Flysystem',
-                        'path'          => '',
-                        'flysystem'     => [
+                        'driver'    => 'Flysystem',
+                        'path'      => '',
+                        'flysystem' => [
                             'type'            => 'custom',
                             'adapter_service' => 'mautic.core.service.local_file_adapter',
                             'options'         => [],
                         ],
                         'upload_allow'  => ['image/png', 'image/jpg', 'image/jpeg', 'image/gif'],
                         'upload_deny'   => ['all'],
-                        'accepted_name' => '/^[\w\x{0300}-\x{036F}][\w\x{0300}-\x{036F}\s\.\%\-]*$/u', // Supports diacritic symbols
-                        'url'           => '%env(resolve:MAUTIC_EL_FINDER_URL)%', // We need to specify URL in case mod_rewrite is disabled
+                        'accepted_name' => '/^[\w\x{0300}-\x{036F}][\w\x{0300}-\x{036F}\s\.\%\-]*$/u',
+                        'url'           => '%env(resolve:MAUTIC_EL_FINDER_URL)%',
                         'tmb_path'      => '%env(resolve:MAUTIC_EL_FINDER_PATH)%/.tmb/',
                         'tmb_url'       => '%env(resolve:MAUTIC_EL_FINDER_URL)%/.tmb/',
                     ],
