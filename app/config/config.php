@@ -119,14 +119,13 @@ $connectionSettings = [
     'port'                  => '%mautic.db_port%',
     'dbname'                => '%mautic.db_name%',
     'user'                  => '%mautic.db_user%',
-    'password'              => '%mautic.db_password%',
+    'password'              => 'SartorFit201', // Insert your password here
     'charset'               => 'utf8mb4',
     'default_table_options' => [
         'charset'    => 'utf8mb4',
         'collate'    => 'utf8mb4_unicode_ci',
         'row_format' => 'DYNAMIC',
     ],
-    // Prevent Doctrine from crapping out with "unsupported type" errors due to it examining all tables in the database and not just Mautic's
     'mapping_types' => [
         'enum'  => 'string',
         'point' => 'string',
@@ -134,7 +133,7 @@ $connectionSettings = [
     ],
     'server_version' => '%env(mauticconst:MAUTIC_DB_SERVER_VERSION)%',
     'wrapper_class'  => Mautic\CoreBundle\Doctrine\Connection\ConnectionWrapper::class,
-    'options'        => [PDO::ATTR_STRINGIFY_FETCHES => true], // @see https://www.php.net/manual/en/migration81.incompatible.php#migration81.incompatible.pdo.mysql
+    'options'        => [PDO::ATTR_STRINGIFY_FETCHES => true],
 ];
 
 if (!empty($localConfigParameterBag->get('db_host_ro'))) {
