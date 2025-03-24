@@ -39,14 +39,20 @@ RUN a2enmod rewrite
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Debug step to verify Composer installation
+RUN composer --version
+
 # Set working directory to Apache document root
 WORKDIR /var/www/html
 
 # Copy Composer files first to leverage Docker cache
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies via Composer
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
+# Debug step to list installed PHP extensions
+RUN php -m
+
+# Run composer install with verbose output to debug
+RUN composer install --no-dev --prefer-dist --optimize-autoloader -vvv
 
 # Copy the rest of your Mautic source code into the container
 COPY . .
